@@ -282,18 +282,120 @@ export class Route {
       );
     });
 
+    app.post("/fetch-gift-count", (req, res) => {
+      const uid = req.body.uid;
+      console.log("fetch-gift-count " + uid);
+
+      this.connection.query(
+        `SELECT count(*) as gift FROM lot WHERE uid='${uid}' AND gift=1`,
+        (err, row) => {
+          if (err) throw err;
+          if (row.length > 0) {
+            res.send(row[0]);
+          } else {
+            res.send(null);
+          }
+        }
+      );
+    });
+
+    app.post("/fetch-gcache-count", (req, res) => {
+      const uid = req.body.uid;
+      console.log("fetch-gcache-count " + uid);
+
+      this.connection.query(
+        `SELECT count(*) as gift FROM lot WHERE uid='${uid}' AND gift=2`,
+        (err, row) => {
+          if (err) throw err;
+          if (row.length > 0) {
+            console.log(row[0]);
+            res.send(row[0]);
+          } else {
+            res.send(null);
+          }
+        }
+      );
+    });
+
+    app.post("/my-room", (req, res) => {
+      const uid = req.body.uid;
+      console.log("my-room " + uid);
+
+      this.connection.query(
+        `SELECT * FROM room JOIN (SELECT roomid, ranking, created FROM lot WHERE uid='test1' and (ranking <= 1)) AS lot ON room.id = lot.roomid ORDER BY created DESC`,
+        (err, row) => {
+          if (err) throw err;
+          res.send(row);
+        }
+      );
+    });
+
+    app.post("/payment/create", (req, res) => {
+      const uid = req.body.uid;
+      const type = req.body.type;
+      console.log("payment create " + uid + " / " + type);
+
+      this.connection.query(
+        `INSERT INTO payment VALUES(null, '${uid}', ${type}, now())`,
+        (err, row) => {
+          if (err) throw err;
+          res.send("success");
+        }
+      );
+    });
+
+    app.post("/gold/create", (req, res) => {
+      const uid = req.body.uid;
+      const type = req.body.type;
+      const gold = req.body.gold;
+      const total = req.body.total;
+      console.log(
+        "gold create " + uid + " / " + type + "/ " + gold + "/" + total
+      );
+      this.connection.query(
+        `UPDATE user SET gold = ${total} WHERE id = '${uid}'`,
+        (err, row) => {
+          if (err) throw err;
+
+          this.connection.query(
+            `INSERT INTO gold_history VALUES(null, '${uid}', ${type}, ${gold}, ${total}, now())`,
+            (err, row) => {
+              if (err) throw err;
+              res.send("success");
+            }
+          );
+        }
+      );
+    });
+
+    app.post("/update-gcache-gift", (req, res) => {
+      const uid = req.body.uid;
+      const roomid = req.body.roomid;
+      console.log("update-gcache-gift " + uid + " / " + roomid);
+      this.connection.query(
+        `UPDATE lot SET gift = 2 WHERE uid = '${uid}' AND roomid = ${roomid}`,
+        (err, row) => {
+          if (err) throw err;
+          res.send("success");
+        }
+      );
+    });
+
     app.post("/request-gift", (req, res) => {
       const uid = req.body.uid;
       const phone = req.body.phone;
+      const roomid = req.body.roomid;
 
-      console.log("request-gift " + uid + " / phone " + phone);
+      console.log(
+        "request-gift " + uid + " / phone " + phone + " / roomid " + roomid
+      );
       this.connection.query(
         `UPDATE user SET phone = '${phone}' WHERE id = '${uid}'`,
         (err, row) => {
           if (err) throw err;
 
           this.connection.query(
-            `UPDATE lot SET gift = 1 WHERE uid = '${uid}'`,
+            `UPDATE lot SET gift = 1 WHERE uid = '${uid}' AND roomid = ${roomid}`,
             (err, row) => {
               if (err) throw err;
               res.send("success");
@@ -305,20 +407,23 @@ export class Route {
 
     app.post("/check-gift", (req, res) => {
       const uid = req.body.uid;
+      const roomid = req.body.roomid;
+      const ret = {};
 
-      console.log("check-gift " + uid);
+      console.log("check-gift " + uid + " / " + roomid);
       this.connection.query(
-        `SELECT gift FROM lot WHERE uid = '${uid}'`,
+        `SELECT gift FROM lot WHERE uid = '${uid}' AND roomid=${roomid}`,
         (err, row) => {
           if (err) throw err;
-
-          if (row.length > 0 && row[0].gift === 1) {
+          if (row.length > 0) {
+            ret.gift = Number(row[0].gift);
             this.connection.query(
               `SELECT phone FROM user WHERE id = '${uid}'`,
               (err, row) => {
                 if (err) throw err;
                 if (row.length > 0 && row[0].phone) {
-                  res.send(row[0].phone);
+                  ret.phone = row[0].phone;
+                  res.send(ret);
                 } else {
                   res.send(null);
                 }
