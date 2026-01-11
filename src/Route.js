@@ -88,9 +88,9 @@ export class Route {
 
     app.post("/update/user-point", (req, res) => {
       const id = req.body.id;
-      const point = req.body.point;
-      console.log("/update/user-point ? " + id + " / " + point);
-      const qry = `update user set point=${point} where id=${id}`;
+      const gold = req.body.gold;
+      console.log("/update/user-point ? " + id + " / " + gold);
+      const qry = `update user set gold=${gold} where id='${id}'`;
       this.connection.query(qry, (err, row) => {
         if (err) {
           res.send("fail");
@@ -131,7 +131,7 @@ export class Route {
     app.get("/fetch/user-by-id/:id", (req, res) => {
       const id = req.params.id;
 
-      const qry = `select * from user where id = ${id}`;
+      const qry = `select * from user where id = '${id}'`;
       console.log("/fetch/user-by-id ? " + id);
       this.connection.query(qry, (err, row) => {
         if (row != null && row.length === 1) {
