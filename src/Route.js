@@ -322,7 +322,7 @@ export class Route {
       console.log("my-room " + uid);
 
       this.connection.query(
-        `SELECT * FROM room JOIN (SELECT roomid, ranking, created FROM lot WHERE uid='test1' and (ranking <= 1)) AS lot ON room.id = lot.roomid ORDER BY created DESC`,
+        `SELECT * FROM room JOIN (SELECT roomid, ranking, created FROM lot WHERE uid='${uid}' and (ranking <= 1)) AS lot ON room.id = lot.roomid ORDER BY created DESC`,
         (err, row) => {
           if (err) throw err;
           res.send(row);
