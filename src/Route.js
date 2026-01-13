@@ -192,7 +192,7 @@ export class Route {
 
       console.log("/login ? " + id + " / " + name + " / " + email);
       this.connection.query(
-        `INSERT INTO user VALUES('${id}', '${name}', '${email}', '', '', '', 0, now(), now()) ON DUPLICATE KEY UPDATE name='${name}', updated=now()`,
+        `INSERT INTO user VALUES('${id}', '${name}', '${email}', '', '', '', 100000, now(), now()) ON DUPLICATE KEY UPDATE name='${name}', updated=now()`,
         (err, row) => {
           if (err) throw err;
           this.connection.query(
